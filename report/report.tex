@@ -1,0 +1,123 @@
+\documentclass[11pt, a4paper]{article}
+
+% Packages
+\usepackage[english]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+
+\usepackage[left=2cm, right=2cm, top=2cm, bottom=2cm]{geometry}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{hyperref}
+
+\usepackage{float}
+
+\usepackage{graphicx}
+\graphicspath{{./img/}}
+\usepackage{tikz}
+
+% Reset paragraph indentation -------------------------------------------------
+\setlength{\parindent}{0cm}
+
+% Allow a paragraph to have a linebreak ---------------------------------------
+\newcommand{\paragraphnl}[1]{\paragraph{#1}\mbox{}\\}
+
+% Page header and footer ------------------------------------------------------
+\pagestyle{fancy}
+\setlength{\headheight}{33pt}
+\renewcommand{\headrulewidth}{0.5pt}
+\lhead{\includegraphics[height=1cm]{hepia.jpg}}
+\chead{Kackpot}
+\rhead{Claudio Sousa - David Gonzalez}
+\renewcommand{\footrulewidth}{0.5pt}
+\lfoot{27 janvier 2017}
+\cfoot{}
+\rfoot{Page \thepage /\pageref{LastPage}}
+
+% Table of contents depth -----------------------------------------------------
+\setcounter{tocdepth}{3}
+
+% Document --------------------------------------------------------------------
+\begin{document}
+
+\title
+{
+    \Huge{Programmation concurrente} \\
+    \Huge{Jackpot}
+}
+\author
+{
+    \LARGE{David Gonzalez - Claudio Sousa}
+}
+\date{27 janvier 2017}
+\maketitle
+
+\begin{center}
+    %\includegraphics[scale=0.27]{logo.png}
+\end{center}
+
+\thispagestyle{empty}
+
+\newpage
+
+% -----------------------------------------------------------------------------
+\section{Introduction}
+
+
+
+\newpage
+
+% -----------------------------------------------------------------------------
+\section{Development}
+\subsection{Architecture}
+
+\begin{figure}[H]
+    \begin{center}
+        %\includegraphics[scale=0.65]{gol_modules.png}
+    \end{center}
+    \caption{Architecture du Jackpot}
+    \label{Architecture du Jackpot}
+\end{figure}
+
+\newpage
+
+
+
+% -----------------------------------------------------------------------------
+\subsection{Concurrence}
+
+\begin{figure}[H]
+    \begin{center}
+        %\includegraphics[width=\textwidth]{workers_flow_diagram.png}
+    \end{center}
+    \caption{Synchronisation}
+    \label{Synchronisation}
+\end{figure}
+
+
+
+\newpage
+
+% -----------------------------------------------------------------------------
+\subsection{Méthodologie de travail}
+\subsubsection{Répartition du travail}
+
+Ce travail a été effectué à deux.
+
+Nous avons commencés par réfléchir sur papier sur deux éléments:
+
+\begin{itemize}
+    \item architecture du programme: modules et interfaces de bases;
+    \item premier jet de synchronisation entre les différents threads. \\
+\end{itemize}
+
+Ensuite, le travail a été réparti ainsi:
+\begin{itemize}
+    \item
+\end{itemize}
+
+Finalement, nous avons mis en commun les modules et finalisés la synchronisation des threads des différents modules.
+
+\newpage
+
+\end{document}
