@@ -3,31 +3,32 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
+
 #include <string.h>
 
 volatile sig_atomic_t etst;
 
-static void controller_coin_inserted(int signum) {
-    (void)signum;
-    char msg[] = "SIGINT received! Aborted.\n";
-    write(STDOUT_FILENO, msg, strlen(msg));
-    _exit(EXIT_SUCCESS);
-}
-
 void controller_start() {
-    struct sigaction act;
-    memset(&act, 0, sizeof(act));
-    act.sa_handler = controller_coin_inserted;
+    sigset_t mask;
+    sigfillset(&mask);
+    pthread_sigmask(SIG_SETMASK, &mask, NULL);
 
-    if (sigaction(SIGINT, &act, NULL) < 0) {
-        perror("sigaction");
-        exit(EXIT_FAILURE);
-    }
-    int count = 0;
-    while (1) {
-        printf("Line %d\n", ++count);
-        sleep(1);
-    }
+    // create threads
+    sigdelset(&mask, SIGQUIT & SIGALRM & SIGTSTP & SIGINT);
+    pthread_sigmask(SIG_SETMASK, &mask, NULL);
+
+    int sig;
+    do {
+        sigwait(&mask, &sig);
+        if (sig == SIGINT)
+            printf("COIN\n");
+        else if (sig == SIGTSTP)
+            printf("WHEEL\n");
+        else if (sig == SIGALRM)
+            printf("ALARM\n");
+    } while (sig != SIGQUIT);
+
+    printf("Quiting..\n");
 
     // SIGQUIT
     // SIGTSTP

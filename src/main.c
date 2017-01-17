@@ -7,11 +7,11 @@
 #include "controller.h"
 
 /**
- * Initialise components and wait till the end
+ * Start game controller and waits for SIGQUIT signal
  * @return Program status
  */
 int main() {
-
     controller_start();
+
     return EXIT_SUCCESS;
 }
