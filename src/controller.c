@@ -3,17 +3,30 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
-
 #include <string.h>
+
+#include "wheel.h"
+#include "display.h"
+
+#define WHEEL_COUNT 3
+#define WHEEL_DELAY_MS 120
 
 volatile sig_atomic_t etst;
 
-void controller_start() {
+static void *controller_play(void *data) {
+    wheel_t *wheels[WHEEL_COUNT];
+    int wheel_values[WHEEL_COUNT];
+
+    int delay = WHEEL_DELAY_MS;
+    for (int i = 0; i < WHEEL_COUNT; i++) {
+        wheels[i] = 0;
+        wheels[i] = wheel_start(delay, wheel_values + i);
+        delay /= 2;  // could be replaced by an array of delays
+    }
+
+    start_display();
     sigset_t mask;
     sigfillset(&mask);
-    pthread_sigmask(SIG_SETMASK, &mask, NULL);
-
-    // create threads
     sigdelset(&mask, SIGQUIT & SIGALRM & SIGTSTP & SIGINT);
     pthread_sigmask(SIG_SETMASK, &mask, NULL);
 
@@ -29,40 +42,24 @@ void controller_start() {
     } while (sig != SIGQUIT);
 
     printf("Quiting..\n");
-
-    // SIGQUIT
-    // SIGTSTP
 }
-/*
 
+int controller_start() {
+    sigset_t mask;
+    sigfillset(&mask);
+    pthread_sigmask(SIG_SETMASK, &mask, NULL);
 
-BLOCK
-sigset_t mask;
-sigfillset(&mask);
-pthread_sigmask(SIG_SETMASK, &mask, NULL);
+    pthread_t play_thread;
 
-SET HANDLE
-struct sigaction act;
-memset(&act, 0, sizeof(act));
-act.sa_handler = handler;
-sigaction(SIGINT, &act, NULL);
+    if (pthread_create(&play_thread, NULL, controller_play, NULL) != 0) {
+        perror("play_thread create");
+        return EXIT_FAILURE;
+    }
 
-UINLOCK
-sigdelset(&mask, SIGINT);
-pthread_sigmask(SIG_SETMASK, &mask, NULL);
+    if (pthread_join(play_thread, NULL) != 0) {
+        perror("play_thread create");
+        return EXIT_FAILURE;
+    }
 
-//wait signal
-sigwait
-
-
-
-//WAIT
-sigset_t mask, maskold;
-sigfillset(&mask);
-pthread_sigmask(SIG_SETMASK, &mask, &maskold);
-
-sigwait(&mask, &sig);
-
-//SIGALRM
-unsigned int alarm(unsigned int seconds);
-*/
+    return EXIT_SUCCESS;
+}

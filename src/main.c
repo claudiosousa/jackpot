@@ -11,7 +11,5 @@
  * @return Program status
  */
 int main() {
-    controller_start();
-
-    return EXIT_SUCCESS;
+    return controller_start();
 }

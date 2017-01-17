@@ -3,8 +3,8 @@
  * @author Claudio Sousa, Gonzalez David
  */
 
-#ifndef TIME_WAIT_H
-#define TIME_WAIT_H
+#ifndef TIMER_H
+#define TIMER_H
 
 #include <time.h>
 
