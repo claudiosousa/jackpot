@@ -11,6 +11,5 @@ typedef struct {
     pthread_cond_t state_change;
     pthread_mutex_t state_m;
 } game_t;
-void game_state_wait(game_t* game, gamestate state);
 
 #endif

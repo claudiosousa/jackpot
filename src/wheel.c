@@ -26,12 +26,14 @@ static void* wheel_run(void* arg) {
 
     timer_start(&ts);
     while (wheelp->game->state != GAME_STOP) {
-        pthread_mutex_lock(&wheelp->game->state_m);
-        while (wheelp->game->state != GAME_STOP &&
-               (wheelp->game->stopped_wheels > wheelp->wheelnb || wheelp->game->state != GAME_RUNNING))
-            pthread_cond_wait(&wheelp->game->state_change, &wheelp->game->state_m);
-        pthread_mutex_unlock(&wheelp->game->state_m);
-
+        //TO cleanup
+        if (wheelp->game->stopped_wheels > wheelp->wheelnb || wheelp->game->state != GAME_RUNNING) {
+            pthread_mutex_lock(&wheelp->game->state_m);
+            while (wheelp->game->state != GAME_STOP &&
+                   (wheelp->game->stopped_wheels > wheelp->wheelnb || wheelp->game->state != GAME_RUNNING))
+                pthread_cond_wait(&wheelp->game->state_change, &wheelp->game->state_m);
+            pthread_mutex_unlock(&wheelp->game->state_m);
+        }
         if (wheelp->game->state == GAME_STOP)
             break;
 

@@ -45,18 +45,15 @@ static void *controller_play(void *data) {
         } else if (sig == SIGTSTP) {
             game.stopped_wheels = 0;
             game.state = GAME_RUNNING;
-        } else if (sig == SIGALRM)
+        } else if (sig == SIGQUIT)
+            game.state = GAME_STOP;
+        else if (sig == SIGALRM)
             printf("ALARM\n");
 
         pthread_mutex_lock(&game.state_m);
         pthread_cond_broadcast(&game.state_change);
         pthread_mutex_unlock(&game.state_m);
     } while (sig != SIGQUIT);
-
-    pthread_mutex_lock(&game.state_m);
-    game.state = GAME_STOP;
-    pthread_cond_broadcast(&game.state_change);
-    pthread_mutex_unlock(&game.state_m);
 
     display_join(display);
 

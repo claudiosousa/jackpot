@@ -39,7 +39,11 @@ static void display_waiting_coin(display_run_t* displayp) {
     clearscren();
     setcursor(1, 1);
     printf("Insert a coin to start the game...");
-    game_state_wait(displayp->game, GAME_RUNNING);
+
+    pthread_mutex_lock(&displayp->game->state_m);
+    while (displayp->game->state != GAME_STOP && displayp->game->state != GAME_RUNNING)
+        pthread_cond_wait(&displayp->game->state_change, &displayp->game->state_m);
+    pthread_mutex_unlock(&displayp->game->state_m);
 }
 
 static void display_game_running(display_run_t* displayp) {
