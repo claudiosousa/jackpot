@@ -24,7 +24,7 @@ static void *controller_play(void *data) {
     int delay = WHEEL_BASE_DELAY_MS;
     for (int i = 0; i < WHEEL_COUNT; i++) {
         wheel_values[i] = 0;
-        wheels[i] = wheel_start(&game, delay, wheel_values + i);
+        wheels[i] = wheel_start(&game, delay, i, wheel_values + i);
         delay /= 2;  // could be replaced by an array of delays
     }
 
@@ -38,15 +38,25 @@ static void *controller_play(void *data) {
     int sig;
     do {
         sigwait(&mask, &sig);
-        if (sig == SIGINT)
-            printf("COIN\n");
-        else if (sig == SIGTSTP) {
-            game_state_set(&game, GAME_RUNNING);
+        if (sig == SIGINT && game.state == GAME_RUNNING) {
+            game.stopped_wheels++;
+            if (game.stopped_wheels == WHEEL_COUNT)
+                game.state = GAME_WAITING_COIN;
+        } else if (sig == SIGTSTP) {
+            game.stopped_wheels = 0;
+            game.state = GAME_RUNNING;
         } else if (sig == SIGALRM)
             printf("ALARM\n");
+
+        pthread_mutex_lock(&game.state_m);
+        pthread_cond_broadcast(&game.state_change);
+        pthread_mutex_unlock(&game.state_m);
     } while (sig != SIGQUIT);
 
-    game_state_set(&game, GAME_STOP);
+    pthread_mutex_lock(&game.state_m);
+    game.state = GAME_STOP;
+    pthread_cond_broadcast(&game.state_change);
+    pthread_mutex_unlock(&game.state_m);
 
     display_join(display);
 

@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <unistd.h>
 
 #include "display.h"
 #include "timer.h"
@@ -58,11 +59,12 @@ static void display_game_running(display_run_t* displayp) {
         }
         timer_wait(&ts, REFRESH_INTERVAL);
     } while (displayp->game->state == GAME_RUNNING);
-}
 
-static void display_game_over() {
-    setcursor(5, 1);
-    printf("RESULTAT ....................!");
+    if (displayp->game->state == GAME_WAITING_COIN) {
+        setcursor(5, 1);
+        printf("RESULTAT ....................!");
+        sleep(5);
+    }
 }
 
 static void display_game_stop() {
@@ -82,9 +84,6 @@ static void* display_run(void* arg) {
                 break;
             case GAME_RUNNING:
                 display_game_running(displayp);
-                break;
-            case GAME_OVER:
-                display_game_over();
                 break;
             default:
                 break;

@@ -14,35 +14,46 @@ struct wheel_t {
 
 typedef struct {
     int delay;
-    int* wheel;
+    int wheelnb;
+    int* wheel_val;
     game_t* game;
 } wheel_run_t;
 
 static void* wheel_run(void* arg) {
     wheel_run_t* wheelp = (wheel_run_t*)arg;
     struct timespec ts;
-    *wheelp->wheel = 0;
+    *wheelp->wheel_val = 0;
 
     timer_start(&ts);
-    do {
-        (*wheelp->wheel)++;
-        *wheelp->wheel %= WHEEL_VALUES;
+    while (wheelp->game->state != GAME_STOP) {
+        pthread_mutex_lock(&wheelp->game->state_m);
+        while (wheelp->game->state != GAME_STOP &&
+               (wheelp->game->stopped_wheels > wheelp->wheelnb || wheelp->game->state != GAME_RUNNING))
+            pthread_cond_wait(&wheelp->game->state_change, &wheelp->game->state_m);
+        pthread_mutex_unlock(&wheelp->game->state_m);
+
+        if (wheelp->game->state == GAME_STOP)
+            break;
+
+        (*wheelp->wheel_val)++;
+        *wheelp->wheel_val %= WHEEL_VALUES;
         timer_wait(&ts, wheelp->delay);
-    } while (wheelp->game->state != GAME_STOP);
+    }
 
     free(arg);
     return NULL;
 }
 
-wheel_t* wheel_start(game_t* game, int delay, int* wheelv) {
+wheel_t* wheel_start(game_t* game, int delay, int wheelnb, int* wheel_val) {
     wheel_t* wheel = malloc(sizeof(wheel_t));
 
-    wheel_run_t* wheep = malloc(sizeof(wheel_run_t));
-    wheep->delay = delay;
-    wheep->wheel = wheelv;
-    wheep->game = game;
+    wheel_run_t* wheelp = malloc(sizeof(wheel_run_t));
+    wheelp->delay = delay;
+    wheelp->wheelnb = wheelnb;
+    wheelp->wheel_val = wheel_val;
+    wheelp->game = game;
 
-    if (pthread_create(&wheel->thread, NULL, wheel_run, wheep) != 0) {
+    if (pthread_create(&wheel->thread, NULL, wheel_run, wheelp) != 0) {
         perror("wheel_thread create");
         return NULL;
     }
