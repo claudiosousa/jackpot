@@ -1,4 +1,4 @@
-FLAGS=-g -Wall -Werror -Wextra -std=gnu99 -D_GNU_SOURCE
+FLAGS=-g -ggdb -Wall -Werror -Wextra -std=gnu99 -D_GNU_SOURCE
 LIBS=-lpthread -lrt
 
 jackpot: main.c wheel.o display.o timer.o controller.o

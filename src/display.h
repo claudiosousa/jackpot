@@ -3,8 +3,7 @@
 
 typedef struct display_t display_t;
 
-display_t* display_start(int delay, int* wheels, int wheelcount);
+display_t* display_start(int* wheels, int wheelcount);
 void display_stop(display_t* wheel);
-void display_join(display_t* wheel);
 
 #endif

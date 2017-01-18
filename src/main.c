@@ -3,7 +3,7 @@
  * @author Claudio Sousa, Gonzalez David
  */
 
-#include <stdlib.h>
+#include <stdio.h>
 #include "controller.h"
 
 /**
@@ -11,5 +11,6 @@
  * @return Program status
  */
 int main() {
+    setbuf(stdout, 0);
     return controller_start();
 }

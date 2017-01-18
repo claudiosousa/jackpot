@@ -14,17 +14,20 @@
 volatile sig_atomic_t etst;
 
 static void *controller_play(void *data) {
+    (void)data;
+
     wheel_t *wheels[WHEEL_COUNT];
     int wheel_values[WHEEL_COUNT];
 
     int delay = WHEEL_DELAY_MS;
     for (int i = 0; i < WHEEL_COUNT; i++) {
-        wheels[i] = 0;
+        wheel_values[i] = 0;
         wheels[i] = wheel_start(delay, wheel_values + i);
         delay /= 2;  // could be replaced by an array of delays
     }
 
-    start_display();
+    display_t *display = display_start(wheel_values, WHEEL_COUNT);
+
     sigset_t mask;
     sigfillset(&mask);
     sigdelset(&mask, SIGQUIT & SIGALRM & SIGTSTP & SIGINT);
@@ -42,6 +45,13 @@ static void *controller_play(void *data) {
     } while (sig != SIGQUIT);
 
     printf("Quiting..\n");
+
+    display_stop(display);
+
+    for (int i = 0; i < WHEEL_COUNT; i++)
+        wheel_stop(wheels[i]);
+
+    return NULL;
 }
 
 int controller_start() {
