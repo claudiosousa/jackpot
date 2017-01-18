@@ -9,14 +9,13 @@
 #define WHEEL_VALUES 10
 
 struct wheel_t {
-    bool stop;
     pthread_t thread;
 };
 
 typedef struct {
     int delay;
     int* wheel;
-    bool* stop;
+    game_t* game;
 } wheel_run_t;
 
 static void* wheel_run(void* arg) {
@@ -29,20 +28,19 @@ static void* wheel_run(void* arg) {
         (*wheelp->wheel)++;
         *wheelp->wheel %= WHEEL_VALUES;
         timer_wait(&ts, wheelp->delay);
-    } while (!*wheelp->stop);
+    } while (wheelp->game->state != GAME_STOP);
 
     free(arg);
     return NULL;
 }
 
-wheel_t* wheel_start(int delay, int* wheelv) {
+wheel_t* wheel_start(game_t* game, int delay, int* wheelv) {
     wheel_t* wheel = malloc(sizeof(wheel_t));
-    wheel->stop = false;
 
     wheel_run_t* wheep = malloc(sizeof(wheel_run_t));
     wheep->delay = delay;
     wheep->wheel = wheelv;
-    wheep->stop = &wheel->stop;
+    wheep->game = game;
 
     if (pthread_create(&wheel->thread, NULL, wheel_run, wheep) != 0) {
         perror("wheel_thread create");
@@ -52,9 +50,7 @@ wheel_t* wheel_start(int delay, int* wheelv) {
     return wheel;
 }
 
-void wheel_stop(wheel_t* wheel) {
-    wheel->stop = true;
-
+void wheel_join(wheel_t* wheel) {
     if (pthread_join(wheel->thread, NULL) != 0)
         perror("wheel_thread join");
 

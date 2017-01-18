@@ -5,28 +5,30 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "game_state.h"
 #include "wheel.h"
 #include "display.h"
 
 #define WHEEL_COUNT 3
-#define WHEEL_DELAY_MS 120
-
-volatile sig_atomic_t etst;
+#define WHEEL_BASE_DELAY_MS 120
 
 static void *controller_play(void *data) {
     (void)data;
 
+    game_t game;
+    game.state = GAME_WAITING_COIN;
+
     wheel_t *wheels[WHEEL_COUNT];
     int wheel_values[WHEEL_COUNT];
 
-    int delay = WHEEL_DELAY_MS;
+    int delay = WHEEL_BASE_DELAY_MS;
     for (int i = 0; i < WHEEL_COUNT; i++) {
         wheel_values[i] = 0;
-        wheels[i] = wheel_start(delay, wheel_values + i);
+        wheels[i] = wheel_start(&game, delay, wheel_values + i);
         delay /= 2;  // could be replaced by an array of delays
     }
 
-    display_t *display = display_start(wheel_values, WHEEL_COUNT);
+    display_t *display = display_start(&game, wheel_values, WHEEL_COUNT);
 
     sigset_t mask;
     sigfillset(&mask);
@@ -38,18 +40,18 @@ static void *controller_play(void *data) {
         sigwait(&mask, &sig);
         if (sig == SIGINT)
             printf("COIN\n");
-        else if (sig == SIGTSTP)
-            printf("WHEEL\n");
-        else if (sig == SIGALRM)
+        else if (sig == SIGTSTP) {
+            game_state_set(&game, GAME_RUNNING);
+        } else if (sig == SIGALRM)
             printf("ALARM\n");
     } while (sig != SIGQUIT);
 
-    printf("Quiting..\n");
+    game_state_set(&game, GAME_STOP);
 
-    display_stop(display);
+    display_join(display);
 
     for (int i = 0; i < WHEEL_COUNT; i++)
-        wheel_stop(wheels[i]);
+        wheel_join(wheels[i]);
 
     return NULL;
 }

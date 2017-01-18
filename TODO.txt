@@ -1,1 +1,3 @@
  - creation de thread controller inutille
+  - add game.h to avoid circular dependencies
+   - replace custom type by pthread_t in display and wheel, remove *_join
