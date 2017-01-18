@@ -19,7 +19,7 @@ typedef struct {
     bool* stop;
 } wheel_run_t;
 
-void* wheel_run(void* arg) {
+static void* wheel_run(void* arg) {
     wheel_run_t* wheelp = (wheel_run_t*)arg;
     struct timespec ts;
     *wheelp->wheel = 0;

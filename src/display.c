@@ -19,16 +19,17 @@ typedef struct {
     bool* stop;
 } display_run_t;
 
-void* display_run(void* arg) {
+// static void setcursor(int y, int x, ) {
+// }
+static void* display_run(void* arg) {
     display_run_t* displayp = (display_run_t*)arg;
     struct timespec ts;
 
     timer_start(&ts);
     do {
-        // todo
+        printf("\e[2J\e[1;1HGameStarted...");
         for (int i = 0; i < displayp->wheelcount; i++)
-            printf("%d ", displayp->wheels[i]);
-        printf("\n");
+            printf("\e[3;%dH%d", i * 2 + 1, displayp->wheels[i]);
 
         timer_wait(&ts, REFRESH_INTERVAL);
     } while (!*displayp->stop);
