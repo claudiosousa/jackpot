@@ -37,7 +37,7 @@ static void *controller_play(void *data) {
 
     int sig;
     do {
-        sigwait(&mask, &sig);
+        sigwait(&mask, &sig); //wait SIGQUIT | SIGALRM | SIGTSTP | SIGINT
         if (sig == SIGINT && game.state == GAME_RUNNING) {
             game.stopped_wheels++;
             if (game.stopped_wheels == WHEEL_COUNT)

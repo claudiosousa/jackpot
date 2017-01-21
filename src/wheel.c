@@ -19,18 +19,27 @@ typedef struct {
     game_t* game;
 } wheel_run_t;
 
+/** Checks if the current wheel should be paused.
+    Pause if the game has not ended and not running or running but the wheel has been stoped already
+
+    @param wheelp The wheel information
+    @returns If the wheel should not update it's value
+*/
+static bool wheel_paused(wheel_run_t* wheelp) {
+    return wheelp->game->state != GAME_STOP &&
+           (wheelp->game->stopped_wheels > wheelp->wheelnb || wheelp->game->state != GAME_RUNNING);
+}
+
 static void* wheel_run(void* arg) {
     wheel_run_t* wheelp = (wheel_run_t*)arg;
     struct timespec ts;
     *wheelp->wheel_val = 0;
 
     timer_start(&ts);
-    while (wheelp->game->state != GAME_STOP) {
-        //TO cleanup
-        if (wheelp->game->stopped_wheels > wheelp->wheelnb || wheelp->game->state != GAME_RUNNING) {
+    while (true) {
+        if (wheel_paused(wheelp)) {  // we test wheel_paused twice to avoid unecessary locking
             pthread_mutex_lock(&wheelp->game->state_m);
-            while (wheelp->game->state != GAME_STOP &&
-                   (wheelp->game->stopped_wheels > wheelp->wheelnb || wheelp->game->state != GAME_RUNNING))
+            while (wheel_paused(wheelp))
                 pthread_cond_wait(&wheelp->game->state_change, &wheelp->game->state_m);
             pthread_mutex_unlock(&wheelp->game->state_m);
         }
@@ -69,36 +78,3 @@ void wheel_join(wheel_t* wheel) {
 
     free(wheel);
 }
-/*
-
-
-BLOCK
-sigset_t mask;
-sigfillset(&mask);
-pthread_sigmask(SIG_SETMASK, &mask, NULL);
-
-SET HANDLE
-struct sigaction act;
-memset(&act, 0, sizeof(act));
-act.sa_handler = handler;u
-sigaction(SIGINT, &act, NULL);
-
-UINLOCK
-sigdelset(&mask, SIGINT);
-pthread_sigmask(SIG_SETMASK, &mask, NULL);
-
-//wait signal
-sigwait
-
-
-
-//WAIT
-sigset_t mask, maskold;
-sigfillset(&mask);
-pthread_sigmask(SIG_SETMASK, &mask, &maskold);
-
-sigwait(&mask, &sig);
-
-//SIGALRM
-unsigned int alarm(unsigned int seconds);
-*/
