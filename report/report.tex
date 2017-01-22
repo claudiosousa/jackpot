@@ -1,7 +1,7 @@
 \documentclass[11pt, a4paper]{article}
 
 % Packages
-\usepackage[english]{babel}
+\usepackage[francais]{babel}
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
 
@@ -27,10 +27,10 @@
 \setlength{\headheight}{33pt}
 \renewcommand{\headrulewidth}{0.5pt}
 \lhead{\includegraphics[height=1cm]{hepia.jpg}}
-\chead{Kackpot}
+\chead{Jackpot}
 \rhead{Claudio Sousa - David Gonzalez}
 \renewcommand{\footrulewidth}{0.5pt}
-\lfoot{27 janvier 2017}
+\lfoot{1 février 2017}
 \cfoot{}
 \rfoot{Page \thepage /\pageref{LastPage}}
 
@@ -49,7 +49,7 @@
 {
     \LARGE{David Gonzalez - Claudio Sousa}
 }
-\date{27 janvier 2017}
+\date{1 février 2017}
 \maketitle
 
 \begin{center}
@@ -63,7 +63,42 @@
 % -----------------------------------------------------------------------------
 \section{Introduction}
 
+Ce TP de deuxième année consiste à implémenter une machine à sous de Casino multi-tâches.
 
+\subsection{Spécification fonctionnelle}
+
+Chaque partie débute avec l'insertion d'une pièce.
+Ensuite, 3 roues tournent à des vitesses différentes.
+Chaque roue est arrêtée consécutivement (de gauche à droite)
+soit manuellement par l'utilisateur, soit automatiquement après 3 secondes. \\
+
+Lorsque toutes les roues sont arrêtées, le résultat est ajouté à la caisse de la machine.
+Ce résultat est calculé selon le nombre de chiffres identiques, les résultats possibles sont:
+\begin{itemize}
+    \item aucun chiffre identique (perdu);
+    \item 2 chiffres identiques (... pièces gagnées);
+    \item 3 chiffres identiques (... pièces gagnées). \\
+\end{itemize}
+
+Ce résultat est affiché pendant 5 secondes, puis revient à l'insertion de la pièce.
+
+\subsubsection{Entrées}
+
+Les entrée sont gérées à l'aide de signaux générés par la console avec les touches suivantes:
+\begin{itemize}
+    \item CTRL-Z (SIGTSTP): insertion d'une pièce;
+    \item CTRL-C (SIGINT): arrêt d'une roue manuellement;
+    \item CTRL-\textbackslash{} (SIGQUIT): arrêt du jeu.
+\end{itemize}
+
+\subsubsection{Threads}
+
+Les threads sont divisés ainsi:
+\begin{itemize}
+    \item 1 thread pour le controlleur du jeu (qui sera le seul à recevoir les signaux);
+    \item 1 thread pour l'affichage;
+    \item N threads, 1 pour chaque roue.
+\end{itemize}
 
 \newpage
 
@@ -73,7 +108,7 @@
 
 \begin{figure}[H]
     \begin{center}
-        %\includegraphics[scale=0.65]{gol_modules.png}
+        %\includegraphics[scale=0.65]{modules.png}
     \end{center}
     \caption{Architecture du Jackpot}
     \label{Architecture du Jackpot}
@@ -113,7 +148,7 @@ Nous avons commencés par réfléchir sur papier sur deux éléments:
 
 Ensuite, le travail a été réparti ainsi:
 \begin{itemize}
-    \item
+    \item ... \\
 \end{itemize}
 
 Finalement, nous avons mis en commun les modules et finalisés la synchronisation des threads des différents modules.
