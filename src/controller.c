@@ -66,7 +66,7 @@ static void *controller_play(void *data) {
                                          ? gamedata.money_machine / 2
                                          : (gamedata.result == DOUBLE_WIN ? MIN(2, gamedata.money_machine) : 0);
                 gamedata.money_machine -= gamedata.money_won;
-                game.state = GAME_WAITING_COIN;
+                game.state = GAME_OVER;
             } else
                 alarm(MAX_MOVE_TIME);
         } else if (sig == SIGTSTP) {
@@ -79,6 +79,14 @@ static void *controller_play(void *data) {
 
         pthread_cond_broadcast(&game.state_change);
         pthread_mutex_unlock(&game.state_m);
+
+        if (game.state == GAME_OVER) {
+            sleep(GAME_FINISHED_WAIT);
+            pthread_mutex_lock(&game.state_m);
+            game.state = GAME_WAITING_COIN;
+            pthread_cond_broadcast(&game.state_change);
+            pthread_mutex_unlock(&game.state_m);
+        }
     } while (game.state != GAME_STOP);
 
     display_join(display);
@@ -102,7 +110,7 @@ int controller_start() {
     }
 
     if (pthread_join(play_thread, NULL) != 0) {
-        perror("play_thread create");
+        perror("play_thread join");
         return EXIT_FAILURE;
     }
 

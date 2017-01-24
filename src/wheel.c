@@ -43,13 +43,13 @@ static void* wheel_run(void* arg) {
         while (wheel_paused(wheelp))
             pthread_cond_wait(&wheelp->game->state_change, &wheelp->game->state_m);
 
-        if (wheelp->game->state != GAME_STOP) {
+        if (wheelp->game->state == GAME_RUNNING) {
             (*wheelp->wheel_val)++;
             *wheelp->wheel_val %= WHEEL_VALUES;
         }
         pthread_mutex_unlock(&wheelp->game->state_m);
 
-        if (wheelp->game->state != GAME_STOP)
+        if (wheelp->game->state == GAME_RUNNING)
             timer_wait(&ts, wheelp->delay);
     }
 

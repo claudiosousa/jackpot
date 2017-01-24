@@ -8,7 +8,6 @@
 #include "timer.h"
 
 #define REFRESH_INTERVAL 1000 / 30
-#define GAME_FINISHED_WAIT 5
 
 struct display_t {
     pthread_t thread;
@@ -66,14 +65,13 @@ static void display_game_running(display_run_t* displayp) {
     do {
         display_game_running_frame(displayp);
         timer_wait(&ts, REFRESH_INTERVAL);
-
     } while (displayp->game->state == GAME_RUNNING);
 
     pthread_mutex_lock(&displayp->game->state_m);
     display_game_running_frame(displayp);
     pthread_mutex_unlock(&displayp->game->state_m);
 
-    if (displayp->game->state == GAME_WAITING_COIN) {
+    if (displayp->game->state == GAME_OVER) {
         setcursor(1, 1);
         printf("Game finished!");
 
@@ -88,7 +86,10 @@ static void display_game_running(display_run_t* displayp) {
         printf("%d coin%s left in the machine", displayp->game_data->money_machine,
                displayp->game_data->money_machine != 1 ? "s" : "");
 
-        sleep(GAME_FINISHED_WAIT);  // display behavior
+        pthread_mutex_lock(&displayp->game->state_m);
+        while (displayp->game->state == GAME_OVER)
+            pthread_cond_wait(&displayp->game->state_change, &displayp->game->state_m);
+        pthread_mutex_unlock(&displayp->game->state_m);
     }
 }
 
