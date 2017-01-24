@@ -57,7 +57,7 @@ static void *controller_play(void *data) {
 
         pthread_mutex_lock(&game.state_m);
 
-        if ((sig == SIGINT && game.state == GAME_RUNNING) || sig == SIGALRM) {
+        if ((sig == SIGINT || sig == SIGALRM) && game.state == GAME_RUNNING) {
             game.stopped_wheels++;
             if (game.stopped_wheels == WHEEL_COUNT) {
                 alarm(0);
