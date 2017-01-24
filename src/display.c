@@ -15,8 +15,7 @@ struct display_t {
 };
 
 typedef struct {
-    int* wheels;
-    int wheelcount;
+    game_data_t* game_data;
     game_t* game;
 } display_run_t;
 
@@ -49,9 +48,9 @@ static void display_waiting_coin(display_run_t* displayp) {
 
 static void display_game_running_frame(display_run_t* displayp) {
     eraseline();
-    for (int i = 0; i < displayp->wheelcount; i++) {
+    for (int i = 0; i < WHEEL_COUNT; i++) {
         setcursor(3, i * 2 + 1);
-        printf("%d", displayp->wheels[i]);
+        printf("%d", displayp->game_data->wheels[i]);
     }
 }
 
@@ -75,8 +74,20 @@ static void display_game_running(display_run_t* displayp) {
     pthread_mutex_unlock(&displayp->game->state_m);
 
     if (displayp->game->state == GAME_WAITING_COIN) {
+        setcursor(1, 1);
+        printf("Game finished!");
+
         setcursor(5, 1);
-        printf("RESULTAT ....................!");
+        printf(displayp->game_data->result == JACKPOT
+                   ? "JACKPOT!"
+                   : (displayp->game_data->result == DOUBLE_WIN ? "Double win!" : "You lost!"));
+
+        setcursor(6, 1);
+        printf("You won %d coin%s", displayp->game_data->money_won, displayp->game_data->money_won != 1 ? "s" : "");
+        setcursor(7, 1);
+        printf("%d coin%s left in the machine", displayp->game_data->money_machine,
+               displayp->game_data->money_machine != 1 ? "s" : "");
+
         sleep(GAME_FINISHED_WAIT);  // display behavior
     }
 }
@@ -110,12 +121,11 @@ static void* display_run(void* arg) {
     return NULL;
 }
 
-display_t* display_start(game_t* game, int* wheels, int wheelcount) {
+display_t* display_start(game_t* game, game_data_t* game_data) {
     display_t* display = malloc(sizeof(display_t));
 
     display_run_t* displayp = malloc(sizeof(display_run_t));
-    displayp->wheels = wheels;
-    displayp->wheelcount = wheelcount;
+    displayp->game_data = game_data;
     displayp->game = game;
 
     if (pthread_create(&display->thread, NULL, display_run, displayp) != 0) {

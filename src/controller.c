@@ -9,8 +9,22 @@
 #include "wheel.h"
 #include "display.h"
 
-#define WHEEL_COUNT 3
-#define WHEEL_BASE_DELAY_MS 120
+#define MIN(a, b) (((a) < (b)) ? (a) : (b))
+
+static gameresult controller_game_result(int *wheels) {
+    int most_matched = 0;
+    int matched;
+    for (int i = 0; i < WHEEL_COUNT - 1; i++) {
+        matched = 1;
+        for (int j = i + 1; j < WHEEL_COUNT; j++)
+            if (wheels[i] == wheels[j])
+                matched++;
+
+        if (matched > most_matched)
+            most_matched = matched;
+    }
+    return most_matched >= 3 ? JACKPOT : (most_matched == 2 ? DOUBLE_WIN : LOST);
+}
 
 static void *controller_play(void *data) {
     (void)data;
@@ -18,17 +32,19 @@ static void *controller_play(void *data) {
     game_t game;
     game.state = GAME_WAITING_COIN;
 
+    game_data_t gamedata;
+    gamedata.money_machine = INITIAL_MONEY;
+    memset(gamedata.wheels, 0, sizeof(int) * WHEEL_COUNT);  // wheel initial state=0
+
     wheel_t *wheels[WHEEL_COUNT];
-    int wheel_values[WHEEL_COUNT];
-    memset(wheel_values, 0, sizeof(int) * WHEEL_COUNT);  // wheel initial state=0
 
     int delay = WHEEL_BASE_DELAY_MS;
     for (int i = 0; i < WHEEL_COUNT; i++) {
-        wheels[i] = wheel_start(&game, delay, i, wheel_values + i);
+        wheels[i] = wheel_start(&game, delay, i, gamedata.wheels + i);
         delay /= 2;  // could be replaced by an array of delays
     }
 
-    display_t *display = display_start(&game, wheel_values, WHEEL_COUNT);
+    display_t *display = display_start(&game, &gamedata);
 
     sigset_t mask;
     sigfillset(&mask);
@@ -43,9 +59,16 @@ static void *controller_play(void *data) {
 
         if ((sig == SIGINT && game.state == GAME_RUNNING) || sig == SIGALRM) {
             game.stopped_wheels++;
-            if (game.stopped_wheels == WHEEL_COUNT)
+            if (game.stopped_wheels == WHEEL_COUNT) {
+                gamedata.result = controller_game_result(gamedata.wheels);
+                gamedata.money_won = gamedata.result == JACKPOT
+                                         ? gamedata.money_machine / 2
+                                         : (gamedata.result == DOUBLE_WIN ? MIN(2, gamedata.money_machine) : 0);
+                gamedata.money_machine -= gamedata.money_won;
                 game.state = GAME_WAITING_COIN;
+            }
         } else if (sig == SIGTSTP) {
+            gamedata.money_machine++;
             game.stopped_wheels = 0;
             game.state = GAME_RUNNING;
         } else if (sig == SIGQUIT)

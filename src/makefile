@@ -1,8 +1,8 @@
 FLAGS=-g -ggdb -Wall -Werror -Wextra -std=gnu99 -D_GNU_SOURCE
 LIBS=-lpthread -lrt
 
-jackpot: main.c wheel.o display.o timer.o controller.o display.h
-	gcc $(FLAGS) -o jackpot main.c display.h *.o $(LIBS)
+jackpot: main.c wheel.o display.o timer.o controller.o game_state.h
+	gcc $(FLAGS) -o jackpot main.c game_state.h *.o $(LIBS)
 
 wheel.o: wheel.c wheel.h
 	gcc $(FLAGS) -c wheel.c

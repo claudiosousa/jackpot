@@ -5,7 +5,7 @@
 
 typedef struct display_t display_t;
 
-display_t* display_start(game_t* game, int* wheels, int wheelcount);
+display_t* display_start(game_t* game, game_data_t* gamedata);
 void display_join(display_t* wheel);
 
 #endif
