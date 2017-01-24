@@ -8,6 +8,7 @@
 #include "timer.h"
 
 #define REFRESH_INTERVAL 1000 / 30
+#define GAME_FINISHED_WAIT 5
 
 struct display_t {
     pthread_t thread;
@@ -41,9 +42,17 @@ static void display_waiting_coin(display_run_t* displayp) {
     printf("Insert a coin to start the game...");
 
     pthread_mutex_lock(&displayp->game->state_m);
-    while (displayp->game->state != GAME_STOP && displayp->game->state != GAME_RUNNING)
+    while (displayp->game->state == GAME_WAITING_COIN)
         pthread_cond_wait(&displayp->game->state_change, &displayp->game->state_m);
     pthread_mutex_unlock(&displayp->game->state_m);
+}
+
+static void display_game_running_frame(display_run_t* displayp) {
+    eraseline();
+    for (int i = 0; i < displayp->wheelcount; i++) {
+        setcursor(3, i * 2 + 1);
+        printf("%d", displayp->wheels[i]);
+    }
 }
 
 static void display_game_running(display_run_t* displayp) {
@@ -56,18 +65,19 @@ static void display_game_running(display_run_t* displayp) {
     timer_start(&ts);
 
     do {
-        eraseline();
-        for (int i = 0; i < displayp->wheelcount; i++) {
-            setcursor(3, i * 2 + 1);
-            printf("%d", displayp->wheels[i]);
-        }
+        display_game_running_frame(displayp);
         timer_wait(&ts, REFRESH_INTERVAL);
+
     } while (displayp->game->state == GAME_RUNNING);
+
+    pthread_mutex_lock(&displayp->game->state_m);
+    display_game_running_frame(displayp);
+    pthread_mutex_unlock(&displayp->game->state_m);
 
     if (displayp->game->state == GAME_WAITING_COIN) {
         setcursor(5, 1);
         printf("RESULTAT ....................!");
-        sleep(5);
+        sleep(GAME_FINISHED_WAIT);  // display behavior
     }
 }
 

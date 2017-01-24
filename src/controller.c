@@ -20,10 +20,10 @@ static void *controller_play(void *data) {
 
     wheel_t *wheels[WHEEL_COUNT];
     int wheel_values[WHEEL_COUNT];
+    memset(wheel_values, 0, sizeof(int) * WHEEL_COUNT);  // wheel initial state=0
 
     int delay = WHEEL_BASE_DELAY_MS;
     for (int i = 0; i < WHEEL_COUNT; i++) {
-        wheel_values[i] = 0;
         wheels[i] = wheel_start(&game, delay, i, wheel_values + i);
         delay /= 2;  // could be replaced by an array of delays
     }
@@ -37,8 +37,11 @@ static void *controller_play(void *data) {
 
     int sig;
     do {
-        sigwait(&mask, &sig); //wait SIGQUIT | SIGALRM | SIGTSTP | SIGINT
-        if (sig == SIGINT && game.state == GAME_RUNNING) {
+        sigwait(&mask, &sig);  // wait SIGQUIT | SIGALRM | SIGTSTP | SIGINT
+
+        pthread_mutex_lock(&game.state_m);
+
+        if ((sig == SIGINT && game.state == GAME_RUNNING) || sig == SIGALRM) {
             game.stopped_wheels++;
             if (game.stopped_wheels == WHEEL_COUNT)
                 game.state = GAME_WAITING_COIN;
@@ -47,13 +50,10 @@ static void *controller_play(void *data) {
             game.state = GAME_RUNNING;
         } else if (sig == SIGQUIT)
             game.state = GAME_STOP;
-        else if (sig == SIGALRM)
-            printf("ALARM\n");
 
-        pthread_mutex_lock(&game.state_m);
         pthread_cond_broadcast(&game.state_change);
         pthread_mutex_unlock(&game.state_m);
-    } while (sig != SIGQUIT);
+    } while (game.state != GAME_STOP);
 
     display_join(display);
 
