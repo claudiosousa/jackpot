@@ -60,14 +60,17 @@ static void *controller_play(void *data) {
         if ((sig == SIGINT && game.state == GAME_RUNNING) || sig == SIGALRM) {
             game.stopped_wheels++;
             if (game.stopped_wheels == WHEEL_COUNT) {
+                alarm(0);
                 gamedata.result = controller_game_result(gamedata.wheels);
                 gamedata.money_won = gamedata.result == JACKPOT
                                          ? gamedata.money_machine / 2
                                          : (gamedata.result == DOUBLE_WIN ? MIN(2, gamedata.money_machine) : 0);
                 gamedata.money_machine -= gamedata.money_won;
                 game.state = GAME_WAITING_COIN;
-            }
+            } else
+                alarm(MAX_MOVE_TIME);
         } else if (sig == SIGTSTP) {
+            alarm(MAX_MOVE_TIME);
             gamedata.money_machine++;
             game.stopped_wheels = 0;
             game.state = GAME_RUNNING;
