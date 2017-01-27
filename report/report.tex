@@ -76,8 +76,8 @@ Lorsque toutes les roues sont arrêtées, le résultat est ajouté à la caisse 
 Ce résultat est calculé selon le nombre de chiffres identiques, les résultats possibles sont:
 \begin{itemize}
     \item aucun chiffre identique (perdu);
-    \item 2 chiffres identiques (... pièces gagnées);
-    \item 3 chiffres identiques (... pièces gagnées). \\
+    \item 2 chiffres identiques (2 pièces gagnées);
+    \item 3 chiffres identiques (moitié des pièces en caisse). \\
 \end{itemize}
 
 Ce résultat est affiché pendant 5 secondes, puis revient à l'insertion de la pièce.
@@ -113,6 +113,57 @@ Les threads sont divisés ainsi:
     \caption{Architecture du Jackpot}
     \label{Architecture du Jackpot}
 \end{figure}
+
+\subsubsection{game\_t et game\_data\_t}
+Ces deux structures représentent toutes les données partagées entre les 3 modules pricipaux,
+qui sont: \textit{Controller}, \textit{Wheel}, \textit{Display}. \\
+
+La première (\textit{game\_t}) contient les données d'état des roues ainsi que les données de synchronisation. \\
+
+La deuxième (\textit{game\_data\_t}) contient les données du jeu en tant que telle:
+la valeur de chaque roue, l'argent restant et l'état final du jeu (gagné, perdu).
+
+\subsubsection{Main}
+La fonction principale du programme ne fait que lancer le \textit{Controller}.
+
+\newpage
+
+\subsubsection{Controller}
+Ce module est le coeur du programme.
+Il est responsable d'instancier le module \textit{Display} ainsi que toutes les instance de \textit{Wheel} (3 par défaut).
+Il est également chargé de contrôler l'avancement du jeu selon la machine d'état ci-dessous:
+
+\begin{figure}[H]
+    \begin{center}
+        \includegraphics[width=0.8\textwidth]{machinestate.png}
+    \end{center}
+    \caption{Machine d'état du contrôleur}
+    \label{Machine d'état du contrôleur}
+\end{figure}
+
+Comme le dit la spécification, les entrée utilisateurs sont gérées par des signaux.
+Le \textit{Controller} est donc le seul module (et \textit{thread}) à recevoir et à traiter ces signaux. \\
+
+Les communications sont faitent aux travers des deux structures citées (\textit{game\_t} et \textit{game\_data\_t}),
+qu'il est chargé d'instantier et d'initialiser. \\
+
+Au niveau des \textit{threads}, le \textit{Controller} crée lui-même son propre \textit{thread} durant son instanciation.
+
+\subsubsection{Wheel}
+Le module \textit{Wheel} est responsable de faire tourner 1 roue (changer le chiffre) dans un \textit{thread} séparé à une certaine fréquence.
+
+\subsubsection{Display}
+Le module \textit{Display} a le rôle de gérer l'affichage du jeu dans son \textit{thread}. Donc:
+\begin{itemize}
+    \item le message de début de parti;
+    \item les roues lorsque la parti est en cours;
+    \item le résultat de cette parti;
+    \item le message lorsqu'on quitte le jeu.
+\end{itemize}
+
+\subsubsection{Timer}
+Ce module contient deux fonctions utilitaires permettant de mesurer le temps et
+d'attendre à une certaine fréquence.
 
 \newpage
 
