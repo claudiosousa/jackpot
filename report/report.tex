@@ -141,6 +141,13 @@ Il est également chargé de contrôler l'avancement du jeu selon la machine d'�
     \label{Machine d'état du contrôleur}
 \end{figure}
 
+\begin{itemize}
+    \item \textit{COIN}: état lorsque le jeu est en attente d'une pièce;
+    \item \textit{RUN} : état lorsque les roues tournent;
+    \item \textit{OVER}: état lorsque le jeu est terminé;
+    \item \textit{STOP}: état lorsqu'on quitte le jeu. \\
+\end{itemize}
+
 Comme le dit la spécification, les entrée utilisateurs sont gérées par des signaux.
 Le \textit{Controller} est donc le seul module (et \textit{thread}) à recevoir et à traiter ces signaux. \\
 
