@@ -176,6 +176,7 @@ d'attendre à une certaine fréquence.
 
 % -----------------------------------------------------------------------------
 \subsection{Flux d'exécution et synchronisation}
+\label{Flux d'exécution et synchronisation}
 
 \begin{figure}[H]
     \begin{center}
@@ -184,6 +185,61 @@ d'attendre à une certaine fréquence.
     \caption{Flux d'exécution et synchronisation}
     \label{Flux d'exécution et synchronisation}
 \end{figure}
+
+\newpage
+
+Le diagramme ci-dessus décrit le flux d'exécution du programme par les différents \textit{threads}.
+
+\subsubsection{Main}
+Le \textit{thread} principal commence par lancer le module \textit{Controller}.
+Avant de créer son \textit{thread}, le \textit{Controller} bloque tous les signaux
+afin que tous les autres \textit{threads} créé après hérite de la configuration. \\
+S'ensuit la création du \textit{thread} pour le \textit{Controller}. \\
+Le \textit{thread} principal finis sa course par l'attente de la fin du \textit{thread} créé précédement.
+
+\subsubsection{Controller}
+Le \textit{Controller} commence par initialiser les structures de données
+et lance les modules \textit{Wheel} ainsi que \textit{Display}.
+La période d'initialisation se termine par la configuration des signaux à traiter. \\
+
+Ensuite, il rentre dans la boucle du traitement des signaux.
+C'est dans celle-ci que la machine d'état (voir figure \ref{Machine d'état du contrôleur}) est configurer.
+En effet, 4 signaux différents peuvent être reçus:
+\begin{itemize}
+    \item SIGTSTP: reinitialise l'état des roues, insert une pièce et configure l'état \textit{RUN};
+    \item SIGQUIT: configure le bit de sortie du programme afin que tous les \textit{threads} quittent;
+    \item SIGINT ou SIGALRM: met en pause la roue courante,
+          si toutes les roue sont en pause, alors l'état \textit{OVER} est configuré. \\
+\end{itemize}
+
+Tous les signaux impliquant un changement d'état, tous les \textit{threads}
+qui alors attendaient un changement d'états sont réveillés. \\
+
+Finalement, si l'état est \textit{OVER} en fin de boucle, alors le \textit{Controller} calcule le résultat du jeu,
+attends les 5 secondes pour l'affichage de celui-ci, configure l'état \textit{COIN} et réveille à nouveau les \textit{threads}. \\
+
+La boucle continue indéfiniment tant que le bit de sorti n'est pas configuré.
+
+\subsubsection{Wheel}
+Lors du lancement d'une roue, le \textit{thread} du \textit{Controller} commence par créer le \textit{thread} de cette roue
+en lui passant en paramètre la structure de synchronisation ainsi que le chiffre que la roue va traiter.
+Le \textit{thread} nouvellement créé rentre immédiatement dans sa boucle qui s'exécute comme suit: \\
+
+Il commence par vérifier qu'il n'est pas en pause. Si oui, alors il se met en attente jusqu'au prochain changement d'état.
+Dans les deux cas, il continue sa route en mettant à jour la valeur de la roue puis attends sa fréquence de rafraichissement. \\
+
+Le flux ci-dessus s'exécute indéfiniment tant que la bit de sorti n'est pas configuré.
+
+\subsubsection{Display}
+Lorsque  le \textit{thread} du \textit{Controller} initialise le module \textit{Display},
+un \textit{thread} est créé pour lui. Sa boucle d'exécution est basé sur la machine d'état:
+\begin{itemize}
+    \item \textit{COIN}: simplement affiche le message et attends le changement d'état;
+    \item \textit{RUN}: tant que cet état est actif, affiche les roues et attends sa fréquence de rafraichissement.
+                        lorsque le jeu passe en état \textit{OVER}, affiche le résultat et attends l'état suivant. \\
+\end{itemize}
+
+Comme pour les autres, la boucle ne se termine pas tant que la bit de sorti n'est pas configuré.
 
 \newpage
 
