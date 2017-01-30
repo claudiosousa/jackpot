@@ -90,8 +90,7 @@ static void controller_play_loop(sigset_t *mask, game_t *game, game_data_t *game
 static void *controller_play(void *data) {
     (void)data;
 
-    game_t game;
-    game.state = GAME_WAITING_COIN;
+    game_t game = {0, GAME_WAITING_COIN, PTHREAD_COND_INITIALIZER, PTHREAD_MUTEX_INITIALIZER};
 
     game_data_t gamedata;
     gamedata.money_machine = INITIAL_MONEY;

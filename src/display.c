@@ -11,7 +11,7 @@
 #include "display.h"
 #include "timer.h"
 
-#define REFRESH_INTERVAL 1000 / 30
+#define REFRESH_INTERVAL 1000 / 30 // 30hz
 
 struct display_t {
     pthread_t thread;
