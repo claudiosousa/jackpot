@@ -63,7 +63,7 @@
 % -----------------------------------------------------------------------------
 \section{Introduction}
 
-Ce TP de deuxième année consiste à implémenter une machine à sous de Casino multi-tâches.
+Ce TP de deuxième année consiste à implémenter une machine à sous de casino multi-tâches.
 
 \subsection{Spécification fonctionnelle}
 
@@ -72,15 +72,15 @@ Ensuite, 3 roues tournent à des vitesses différentes.
 Chaque roue est arrêtée consécutivement (de gauche à droite)
 soit manuellement par l'utilisateur, soit automatiquement après 3 secondes. \\
 
-Lorsque toutes les roues sont arrêtées, le résultat est ajouté à la caisse de la machine.
-Ce résultat est calculé selon le nombre de chiffres identiques, les résultats possibles sont:
+Lorsque toutes les roues sont arrêtées, le résultat est calculé et soustrait à la caisse de la machine.
+Les résultats possibles sont:
 \begin{itemize}
     \item aucun chiffre identique (perdu);
     \item 2 chiffres identiques (2 pièces gagnées);
-    \item 3 chiffres identiques (moitié des pièces en caisse). \\
+    \item 3 chiffres identiques ou plus (moitié des pièces en caisse). \\
 \end{itemize}
 
-Ce résultat est affiché pendant 5 secondes, puis revient à l'insertion de la pièce.
+Ce résultat est affiché pendant 5 secondes, puis on attend à nouveau l'insertion d'une pièce.
 
 \subsubsection{Entrées}
 
@@ -120,8 +120,8 @@ qui sont: \textit{Controller}, \textit{Wheel}, \textit{Display}. \\
 
 La première (\textit{game\_t}) contient les données d'état des roues ainsi que les données de synchronisation. \\
 
-La deuxième (\textit{game\_data\_t}) contient les données du jeu en tant que telle:
-la valeur de chaque roue, l'argent restant et l'état final du jeu (gagné, perdu).
+La deuxième (\textit{game\_data\_t}) contient les données du jeu et de la partie:
+la valeur de chaque roue, l'argent en caisse et l'état final du jeu (gagné, perdu).
 
 \subsubsection{Main}
 La fonction principale du programme ne fait que lancer le \textit{Controller}.
@@ -144,17 +144,17 @@ Il est également chargé de contrôler l'avancement du jeu selon la machine d'�
 \begin{itemize}
     \item \textit{COIN}: état lorsque le jeu est en attente d'une pièce;
     \item \textit{RUN} : état lorsque les roues tournent;
-    \item \textit{OVER}: état lorsque le jeu est terminé;
+    \item \textit{OVER}: état lorsque la partie est terminée;
     \item \textit{STOP}: état lorsqu'on quitte le jeu. \\
 \end{itemize}
 
 Comme le dit la spécification, les entrée utilisateurs sont gérées par des signaux.
 Le \textit{Controller} est donc le seul module (et \textit{thread}) à recevoir et à traiter ces signaux. \\
 
-Les communications sont faitent aux travers des deux structures citées (\textit{game\_t} et \textit{game\_data\_t}),
+Les communications sont faitent au travers des deux structures citées (\textit{game\_t} et \textit{game\_data\_t}),
 qu'il est chargé d'instantier et d'initialiser. \\
 
-Au niveau des \textit{threads}, le \textit{Controller} crée lui-même son propre \textit{thread} durant son instanciation.
+Au niveau des \textit{threads}, le \textit{Controller} crée lui-même son propre \textit{thread} durant son initialisation.
 
 \subsubsection{Wheel}
 Le module \textit{Wheel} est responsable de faire tourner 1 roue (changer le chiffre) dans un \textit{thread} séparé à une certaine fréquence.
@@ -162,9 +162,9 @@ Le module \textit{Wheel} est responsable de faire tourner 1 roue (changer le chi
 \subsubsection{Display}
 Le module \textit{Display} a le rôle de gérer l'affichage du jeu dans son \textit{thread}. Donc:
 \begin{itemize}
-    \item le message de début de parti;
-    \item les roues lorsque la parti est en cours;
-    \item le résultat de cette parti;
+    \item le message de début de partie;
+    \item les roues lorsque la partie est en cours;
+    \item le résultat de cette partie;
     \item le message lorsqu'on quitte le jeu.
 \end{itemize}
 
@@ -193,9 +193,9 @@ Le diagramme ci-dessus décrit le flux d'exécution du programme par les différ
 \subsubsection{Main}
 Le \textit{thread} principal commence par lancer le module \textit{Controller}.
 Avant de créer son \textit{thread}, le \textit{Controller} bloque tous les signaux
-afin que tous les autres \textit{threads} créé après hérite de la configuration. \\
+afin que tous les autres \textit{threads} créés après héritent de cette configuration. \\
 S'ensuit la création du \textit{thread} pour le \textit{Controller}. \\
-Le \textit{thread} principal finis sa course par l'attente de la fin du \textit{thread} créé précédement.
+Le \textit{thread} principal finit sa course par l'attente de la fin du \textit{thread} créé précédement.
 
 \subsubsection{Controller}
 Le \textit{Controller} commence par initialiser les structures de données
@@ -203,20 +203,20 @@ et lance les modules \textit{Wheel} ainsi que \textit{Display}.
 La période d'initialisation se termine par la configuration des signaux à traiter. \\
 
 Ensuite, il rentre dans la boucle du traitement des signaux.
-C'est dans celle-ci que la machine d'état (voir figure \ref{Machine d'état du contrôleur}) est configurer.
+C'est dans celle-ci que la machine d'état (voir figure \ref{Machine d'état du contrôleur}) est configurée.
 En effet, 4 signaux différents peuvent être reçus:
 \begin{itemize}
-    \item SIGTSTP: reinitialise l'état des roues, insert une pièce et configure l'état \textit{RUN};
+    \item SIGTSTP: reinitialise l'état des roues, insert une pièce et passe à l'état \textit{RUN};
     \item SIGQUIT: configure le bit de sortie du programme afin que tous les \textit{threads} quittent;
     \item SIGINT ou SIGALRM: met en pause la roue courante,
-          si toutes les roue sont en pause, alors l'état \textit{OVER} est configuré. \\
+          si toutes les roue sont en pause, alors l'état \textit{OVER} est mis. \\
 \end{itemize}
 
 Tous les signaux impliquant un changement d'état, tous les \textit{threads}
-qui alors attendaient un changement d'états sont réveillés. \\
+qui attendent un changement d'état sont réveillés. \\
 
 Finalement, si l'état est \textit{OVER} en fin de boucle, alors le \textit{Controller} calcule le résultat du jeu,
-attends les 5 secondes pour l'affichage de celui-ci, configure l'état \textit{COIN} et réveille à nouveau les \textit{threads}. \\
+attends les 5 secondes pour l'affichage de celui-ci, passe à l'état \textit{COIN} et réveille à nouveau les \textit{threads}. \\
 
 La boucle continue indéfiniment tant que le bit de sorti n'est pas configuré.
 
@@ -226,20 +226,20 @@ en lui passant en paramètre la structure de synchronisation ainsi que le chiffr
 Le \textit{thread} nouvellement créé rentre immédiatement dans sa boucle qui s'exécute comme suit: \\
 
 Il commence par vérifier qu'il n'est pas en pause. Si oui, alors il se met en attente jusqu'au prochain changement d'état.
-Dans les deux cas, il continue sa route en mettant à jour la valeur de la roue puis attends sa fréquence de rafraichissement. \\
+Sinon, il continue sa route en mettant à jour la valeur de la roue puis attends sa fréquence de rafraichissement. \\
 
 Le flux ci-dessus s'exécute indéfiniment tant que la bit de sorti n'est pas configuré.
 
 \subsubsection{Display}
 Lorsque  le \textit{thread} du \textit{Controller} initialise le module \textit{Display},
-un \textit{thread} est créé pour lui. Sa boucle d'exécution est basé sur la machine d'état:
+un \textit{thread} est créé pour lui. Sa boucle d'exécution est basée sur la machine d'état:
 \begin{itemize}
     \item \textit{COIN}: simplement affiche le message et attends le changement d'état;
     \item \textit{RUN}: tant que cet état est actif, affiche les roues et attends sa fréquence de rafraichissement.
-                        lorsque le jeu passe en état \textit{OVER}, affiche le résultat et attends l'état suivant. \\
+	\subitem Lorsque le jeu passe en état \textit{OVER}, affiche le résultat et attends l'état suivant. \\
 \end{itemize}
 
-Comme pour les autres, la boucle ne se termine pas tant que la bit de sorti n'est pas configuré.
+Comme pour les autres \textit{threads}, la boucle ne se termine pas tant que la bit de sorti n'est pas configuré.
 
 \newpage
 
@@ -249,19 +249,15 @@ Comme pour les autres, la boucle ne se termine pas tant que la bit de sorti n'es
 
 Ce travail a été effectué à deux.
 
-Nous avons commencés par réfléchir sur papier sur deux éléments:
+Une réflexion initialle commune a permis de concevoir les fondations du programme:
 
 \begin{itemize}
-    \item architecture du programme: modules et interfaces de bases;
-    \item flux d'exécution général du programme. \\
+    \item architecture (modules et interface publique);
+    \item flux d'exécution (machine d'état et synchronisation). \\
 \end{itemize}
 
-Ensuite, le travail a été réparti ainsi:
-\begin{itemize}
-    \item ... \\
-\end{itemize}
+L'implementation de cette réflexion a été  divisée en motiées égales, chacune implémentée par l'un et révisée par l'autre. \\
 
-Finalement, nous avons mis en commun les modules et finalisés la synchronisation des threads des différents modules.
 
 \newpage
 
