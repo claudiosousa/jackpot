@@ -26,6 +26,46 @@ static gameresult controller_game_result(int *wheels) {
     return most_matched >= 3 ? JACKPOT : (most_matched == 2 ? DOUBLE_WIN : LOST);
 }
 
+static void controller_play_loop(sigset_t *mask, game_t *game, game_data_t *gamedata) {
+    int sig;
+    do {
+        sigwait(mask, &sig);  // wait SIGQUIT | SIGALRM | SIGTSTP | SIGINT
+
+        pthread_mutex_lock(&game->state_m);
+
+        if ((sig == SIGINT || sig == SIGALRM) && game->state == GAME_RUNNING) {
+            game->stopped_wheels++;
+            if (game->stopped_wheels == WHEEL_COUNT) {
+                alarm(0);
+                gamedata->result = controller_game_result(gamedata->wheels);
+                gamedata->money_won = gamedata->result == JACKPOT
+                                          ? gamedata->money_machine / 2
+                                          : (gamedata->result == DOUBLE_WIN ? MIN(2, gamedata->money_machine) : 0);
+                gamedata->money_machine -= gamedata->money_won;
+                game->state = GAME_OVER;
+            } else
+                alarm(MAX_MOVE_TIME);
+        } else if (sig == SIGTSTP) {
+            alarm(MAX_MOVE_TIME);
+            gamedata->money_machine++;
+            game->stopped_wheels = 0;
+            game->state = GAME_RUNNING;
+        } else if (sig == SIGQUIT)
+            game->state = GAME_STOP;
+
+        pthread_cond_broadcast(&game->state_change);
+        pthread_mutex_unlock(&game->state_m);
+
+        if (game->state == GAME_OVER) {
+            sleep(GAME_FINISHED_WAIT);
+            pthread_mutex_lock(&game->state_m);
+            game->state = GAME_WAITING_COIN;
+            pthread_cond_broadcast(&game->state_change);
+            pthread_mutex_unlock(&game->state_m);
+        }
+    } while (game->state != GAME_STOP);
+}
+
 static void *controller_play(void *data) {
     (void)data;
 
@@ -51,43 +91,7 @@ static void *controller_play(void *data) {
     sigdelset(&mask, SIGQUIT & SIGALRM & SIGTSTP & SIGINT);
     pthread_sigmask(SIG_SETMASK, &mask, NULL);
 
-    int sig;
-    do {
-        sigwait(&mask, &sig);  // wait SIGQUIT | SIGALRM | SIGTSTP | SIGINT
-
-        pthread_mutex_lock(&game.state_m);
-
-        if ((sig == SIGINT || sig == SIGALRM) && game.state == GAME_RUNNING) {
-            game.stopped_wheels++;
-            if (game.stopped_wheels == WHEEL_COUNT) {
-                alarm(0);
-                gamedata.result = controller_game_result(gamedata.wheels);
-                gamedata.money_won = gamedata.result == JACKPOT
-                                         ? gamedata.money_machine / 2
-                                         : (gamedata.result == DOUBLE_WIN ? MIN(2, gamedata.money_machine) : 0);
-                gamedata.money_machine -= gamedata.money_won;
-                game.state = GAME_OVER;
-            } else
-                alarm(MAX_MOVE_TIME);
-        } else if (sig == SIGTSTP) {
-            alarm(MAX_MOVE_TIME);
-            gamedata.money_machine++;
-            game.stopped_wheels = 0;
-            game.state = GAME_RUNNING;
-        } else if (sig == SIGQUIT)
-            game.state = GAME_STOP;
-
-        pthread_cond_broadcast(&game.state_change);
-        pthread_mutex_unlock(&game.state_m);
-
-        if (game.state == GAME_OVER) {
-            sleep(GAME_FINISHED_WAIT);
-            pthread_mutex_lock(&game.state_m);
-            game.state = GAME_WAITING_COIN;
-            pthread_cond_broadcast(&game.state_change);
-            pthread_mutex_unlock(&game.state_m);
-        }
-    } while (game.state != GAME_STOP);
+    controller_play_loop(&mask, &game, &gamedata);
 
     display_join(display);
 
