@@ -1,3 +1,7 @@
+/**
+ * Some helper functions for managing execution time.
+ * @author Claudio Sousa, David Gonzalez
+ */
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,17 +23,22 @@ typedef struct {
     game_t* game;
 } wheel_run_t;
 
-/** Checks if the current wheel should be paused.
-    Pause if the game has not ended and not running or running but the wheel has been stoped already
-
-    @param wheelp The wheel information
-    @returns If the wheel should not update it's value
+/**
+ * Checks if the current wheel should be paused.
+ * Pause if the game has not ended and not running or running but the wheel has been stoped already
+ * @param wheelp The wheel information
+ * @return If the wheel should not update it's value
 */
 static bool wheel_paused(wheel_run_t* wheelp) {
     return wheelp->game->state != GAME_STOP &&
            (wheelp->game->stopped_wheels > wheelp->wheel_id || wheelp->game->state != GAME_RUNNING);
 }
 
+/**
+ * Wheel loop updating the wheel value
+ * @param arg Not used
+ * @return NULL
+*/
 static void* wheel_run(void* arg) {
     wheel_run_t* wheelp = (wheel_run_t*)arg;
     *wheelp->wheel_val = 0;
@@ -57,6 +66,14 @@ static void* wheel_run(void* arg) {
     return NULL;
 }
 
+/**
+ * Creates a wheel instance
+ * @param game Game state
+ * @param delay Wheel refresh period
+ * @param wheel_id Wheel id
+ * @param wheel_val Wheel value
+ * @return The created wheel instance
+*/
 wheel_t* wheel_start(game_t * game, int delay, int wheel_id, int* wheel_val) {
     wheel_t* wheel = malloc(sizeof(wheel_t));
 
@@ -74,6 +91,10 @@ wheel_t* wheel_start(game_t * game, int delay, int wheel_id, int* wheel_val) {
     return wheel;
 }
 
+/**
+ * Joins the wheel thread
+ * @param display_t The wheel instance
+ */
 void wheel_join(wheel_t * wheel) {
     if (pthread_join(wheel->thread, NULL) != 0)
         perror("wheel_thread join");

@@ -1,3 +1,7 @@
+/**
+ * Some helper functions for managing execution time.
+ * @author Claudio Sousa, David Gonzalez
+ */
 #ifndef WHEEL_H
 #define WHEEL_H
 

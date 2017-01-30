@@ -1,4 +1,8 @@
-#ifndef GAME_STATE_H
+/**
+ * Game structures shared accross modules
+ * @author David Gonzalez, Claudio Sousa
+ */
+ #ifndef GAME_STATE_H
 #define GAME_STATE_H
 
 #include <pthread.h>
@@ -12,6 +16,7 @@
 typedef enum { GAME_WAITING_COIN, GAME_RUNNING, GAME_OVER, GAME_STOP } gamestate;
 typedef enum { JACKPOT, DOUBLE_WIN, LOST } gameresult;
 
+/** The game synchronization data*/
 typedef struct {
     int stopped_wheels;
     gamestate state;
@@ -19,6 +24,7 @@ typedef struct {
     pthread_mutex_t state_m;
 } game_t;
 
+/** The game data*/
 typedef struct {
     int wheels[WHEEL_COUNT];
     int money_machine;

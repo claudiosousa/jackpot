@@ -1,4 +1,8 @@
-#include <pthread.h>
+/**
+ * Module handling the display
+ * @author Claudio Sousa, David Gonzalez
+ */
+ #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -34,6 +38,10 @@ static void eraseline() {
     printf("\e[2K");
 }
 
+/**
+ * Displays 'wait coin' screen
+ * @param displayp The display data
+ */
 static void display_waiting_coin(display_run_t* displayp) {
     clearscren();
     setcursor(1, 1);
@@ -45,6 +53,10 @@ static void display_waiting_coin(display_run_t* displayp) {
     pthread_mutex_unlock(&displayp->game->state_m);
 }
 
+/**
+ * Displays a wheel combination
+ * @param displayp The display data
+ */
 static void display_game_running_frame(display_run_t* displayp) {
     eraseline();
     for (int i = 0; i < WHEEL_COUNT; i++) {
@@ -53,6 +65,10 @@ static void display_game_running_frame(display_run_t* displayp) {
     }
 }
 
+/**
+ * Displays the 'running game' screen
+ * @param displayp The display data
+ */
 static void display_game_running(display_run_t* displayp) {
     clearscren();
     setcursor(1, 1);
@@ -93,12 +109,20 @@ static void display_game_running(display_run_t* displayp) {
     }
 }
 
+/**
+ * Displays the 'game quit' screen
+ */
 static void display_game_stop() {
     clearscren();
     setcursor(1, 1);
     printf("Come again soon!\n");
 }
 
+/**
+ * Handles the display loop
+ * @param arg Not used
+ * @return NULL
+ */
 static void* display_run(void* arg) {
     hidecursor();
 
@@ -122,6 +146,12 @@ static void* display_run(void* arg) {
     return NULL;
 }
 
+/**
+ * Creates a display instance
+ * @param game The game state
+ * @param game_data The game data
+ * @return The created display instance
+ */
 display_t* display_start(game_t* game, game_data_t* game_data) {
     display_t* display = malloc(sizeof(display_t));
 
@@ -137,6 +167,10 @@ display_t* display_start(game_t* game, game_data_t* game_data) {
     return display;
 }
 
+/**
+ * Joins the display thread
+ * @param display_t The display instance
+ */
 void display_join(display_t* display) {
     if (pthread_join(display->thread, NULL) != 0)
         perror("display_thread join");

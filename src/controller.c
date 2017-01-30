@@ -1,3 +1,7 @@
+/**
+ * Some helper functions for managing execution time.
+ * @author Claudio Sousa, David Gonzalez
+ */
 #include <pthread.h>
 #include <signal.h>
 #include <stdlib.h>
@@ -11,6 +15,11 @@
 
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 
+/**
+ * Calculates a game result depending on the wheels state
+ * @param wheels The wheels' values
+ * @return The game result
+ */
 static gameresult controller_game_result(int *wheels) {
     int most_matched = 0;
     int matched;
@@ -26,6 +35,12 @@ static gameresult controller_game_result(int *wheels) {
     return most_matched >= 3 ? JACKPOT : (most_matched == 2 ? DOUBLE_WIN : LOST);
 }
 
+/**
+ * The game loop, handles the game state
+ * @param mask Mask of the signals to wait for
+ * @param game The game state state and synchronization objects
+ * @param gamedata State of the current game and wheels
+ */
 static void controller_play_loop(sigset_t *mask, game_t *game, game_data_t *gamedata) {
     int sig;
     do {
@@ -66,6 +81,12 @@ static void controller_play_loop(sigset_t *mask, game_t *game, game_data_t *game
     } while (game->state != GAME_STOP);
 }
 
+/**
+ * The controller thread.
+ * It creates wheels and display threads and calls the game loop.
+ * @param data Not used
+ * @return NULL
+ */
 static void *controller_play(void *data) {
     (void)data;
 
@@ -101,6 +122,11 @@ static void *controller_play(void *data) {
     return NULL;
 }
 
+/**
+ * Starts the game controller.
+ * Synchronous method, returns end the game quits
+ * @return EXIT_SUCCESS or EXIT_FAILURE
+ */
 int controller_start() {
     sigset_t mask;
     sigfillset(&mask);

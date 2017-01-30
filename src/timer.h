@@ -1,6 +1,6 @@
 /**
  * Some helper functions for managing execution time.
- * @author Claudio Sousa, Gonzalez David
+ * @author Gonzalez David, Claudio Sousa
  */
 
 #ifndef TIMER_H

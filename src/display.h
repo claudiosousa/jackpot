@@ -1,3 +1,8 @@
+/**
+ * Module handling the display
+ * @author Claudio Sousa, David Gonzalez
+ */
+
 #ifndef DISPLAY_H
 #define DISPLAY_H
 
